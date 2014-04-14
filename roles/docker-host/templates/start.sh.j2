@@ -1,0 +1,11 @@
+#!/bin/bash
+OWNER=$(stat -c %U /workspace)
+if [ OWNER != "jenkins" ]
+then
+  chown -R jenkins:jenkins /workspace
+fi
+# Use swarm client to connect to jenkins. Broadcast didn't work due to container networking,
+# so easiest thing to do was just to set right address.
+{% set labelscsv = labels|join(",") -%}
+{% set labelsflag = '-labels ' + labelscsv -%}
+su -c "/usr/bin/java -jar swarm-client-1.15-jar-with-dependencies.jar -master {{jenkins_master}} -executors 1 -mode {{mode}} {{ labelsflag if labels else '' }} -fsroot /workspace $@" - jenkins

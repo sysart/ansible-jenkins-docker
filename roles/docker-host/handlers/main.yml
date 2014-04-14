@@ -1,0 +1,39 @@
+- name: reload systemd
+  command: systemctl daemon-reload
+
+# Can't use service here, as I do not want this to started, just enabled
+- name: enable services for {{container_names}}
+  command: /usr/bin/systemctl enable {{ item }}
+  with_items: container_names
+
+# service cannot be used here, Ansible fails to parse output.
+- name: stop {{container_names}}
+  command: /usr/bin/systemctl stop {{ item }}
+#  service: name={{ item }} state=stopped
+  with_items: container_names
+
+# Jenkins takes a while to remove slaves. If containers are started immediately, they will have names
+#.containing ip -address of the host in them. ugly :(
+- name: wait for containers to be removed on Jenkins side
+  command: curl -s -w %{http_code} {{ jenkins_master }}/computer/{{ansible_hostname}}-{{item}}/api/json -o /dev/null
+  register: result
+  tags: check
+  until: result.stdout.find("404") != -1
+  retries: 10
+  delay: 5
+  with_items: container_names
+
+- name: remove {{container_names}}
+  docker: name="{{item}}" state=absent image="{{image_name}}"
+  with_items: container_names
+
+- name: create containers {{container_names}} with image {{image_name}}
+  docker: image="{{image_name}}" name="{{item}}" hostname="{{item}}" memory_limit=2048MB state=present command="\"-name {{ansible_hostname}}-{{item}}\"" volumes="/data/builders/{{item}}:/workspace"
+  with_items: container_names
+
+- name: wait for containers to be started
+  pause: seconds=10
+
+- name: start {{container_names}}
+  command: /usr/bin/systemctl start {{ item }}
+  with_items: container_names

@@ -1,0 +1,21 @@
+FROM fedora
+MAINTAINER jyrki.puttonen@sysart.fi
+RUN yum install -y java-1.7.0-openjdk-devel blackbox firefox tigervnc-server dejavu-sans-fonts dejavu-serif-fonts ImageMagick unzip ansible puppet git tigervnc
+RUN useradd jenkins
+ADD vncpasswd /home/jenkins/.vnc/passwd
+RUN chown -R jenkins:jenkins /home/jenkins/.vnc
+# Run as jenkins user. Biggest reason for this is that in our tests, we want
+# # check some filesystem rights, and those tests will fail if the user is root.
+#ADD http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/1.15/swarm-client-1.15-jar-with-dependencies.jar /home/jenkins/
+ADD swarm-client-1.15-jar-with-dependencies.jar /home/jenkins/
+# Without this, maven has problems with umlauts in tests
+ENV JAVA_TOOL_OPTIONS -Dfile.encoding=UTF8
+#so vncserver etc use right directory
+ENV HOME /home/jenkins
+WORKDIR /home/jenkins/
+ADD start.sh /home/jenkins/
+RUN chmod 755 /home/jenkins/start.sh
+ENTRYPOINT ["/home/jenkins/start.sh"]
+{% for item in docker_file_additions -%}
+{{ item }};
+{% endfor -%}

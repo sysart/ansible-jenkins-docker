@@ -1,0 +1,8 @@
+- hosts: jenkins-slaves
+  vars:
+   - jenkins_master: "http://jenkinsserver.dev.sysart.fi:8080/"
+   - container_names: [ builder1, builder2, builder3, builder4, builder5, builder6 ]
+  roles:
+   - common
+   - { role: docker-host, image_name: jenkins_builder, labels: [ "docker", "example" ], mode: normal }
+  sudo: yes

@@ -1,0 +1,63 @@
+# As I want to control individual containers with systemd, install new unit
+# file that adds "-r" to options so docker -d doesn't start containers.
+# Without this, containers started by systemd would fail to start, and would be
+# started again
+- name: install unit file for  docker
+  copy: src=docker.service dest=/etc/systemd/system/docker.service
+  notify:
+  - reload systemd
+
+# Install docker from updates-testing, as there 0.9.1 available and it handles deleting containers better
+- name: install docker
+  yum: name=docker-io state=present enablerepo=updates-testing
+
+- name: start docker service
+  service: name=docker enabled=yes state=started
+
+- name: install virtualenv
+  yum: name=python-virtualenv state=absent
+
+- name: install pip
+  yum: name=python-pip state=present
+
+# docker module requires version that is > 0.3, which is not in Fedora repos, so install with pip
+- name: install docker-py
+  pip: name=docker-py state=present
+
+- name: create working directory {{image_build_directory}} for docker
+  file: path={{image_build_directory}} state=directory
+
+- name: install unit file for systemd {{container_names}}
+  template: src=container-runner.service.j2 dest=/etc/systemd/system/{{item}}.service
+  with_items: container_names
+  notify:
+   - enable services for {{container_names}}
+   - reload systemd
+
+# Setup files needed for building docker image for Jenkins usage
+- name: Download swarm client
+  get_url: url="http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/1.15/swarm-client-1.15-jar-with-dependencies.jar" dest={{image_build_directory}}
+
+- name: copy vnc password file
+  copy: src=vncpasswd dest={{image_build_directory}}
+
+- name: create start.sh
+  template: src=start.sh.j2 dest={{image_build_directory}}/start.sh validate="bash -n %s"
+
+- name: copy {{docker_file}} to host
+  template: src="{{docker_file}}" dest="{{image_build_directory}}/Dockerfile"
+
+- name: create volume directories for containers
+  file: path="/data/builders/{{item}}" state=directory
+  with_items: container_names
+
+# For some reason, this will always return changed
+- name: build docker image {{ image_name }}
+  docker_image: path="{{image_build_directory}}" name="{{image_name}}" state=present
+  notify:
+  - stop {{container_names}}
+  - wait for containers to be removed on Jenkins side
+  - remove {{container_names}}
+  - create containers {{container_names}} with image {{image_name}}
+  - wait for containers to be started
+  - start {{container_names}}

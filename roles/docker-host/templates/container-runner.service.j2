@@ -1,0 +1,11 @@
+[Unit]
+Description={{item}}/{{image_name}}
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker start -a {{item}}
+ExecStop=/usr/bin/docker stop -t 2 {{item}}
+
+[Install]
+WantedBy=local.target
