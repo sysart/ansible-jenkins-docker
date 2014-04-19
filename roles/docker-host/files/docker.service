@@ -4,7 +4,7 @@ Documentation=http://docs.docker.io
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/docker -d -r
+ExecStart=/usr/bin/docker -d
 Restart=on-failure
 LimitNOFILE=1048576
 LimitNPROC=1048576
