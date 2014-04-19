@@ -19,3 +19,4 @@ ENTRYPOINT ["/home/jenkins/start.sh"]
 {% for item in docker_file_additions -%}
 {{ item }}
 {% endfor -%}
+RUN chown -R jenkins:jenkins /home/jenkins/
