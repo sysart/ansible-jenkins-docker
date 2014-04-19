@@ -34,6 +34,10 @@
    - enable services for {{container_names}}
    - reload systemd
 
+- name: setup limits for users
+  template: src=docker-host-limits.conf.j2 dest=/etc/security/limits.d/99-docker-limits.conf owner=root group=root mode=0644
+  tags: limits
+
 # Setup files needed for building docker image for Jenkins usage
 - name: Download swarm client
   get_url: url="http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/1.15/swarm-client-1.15-jar-with-dependencies.jar" dest={{image_build_directory}}
@@ -43,6 +47,9 @@
 
 - name: create start.sh
   template: src=start.sh.j2 dest={{image_build_directory}}/start.sh validate="bash -n %s"
+
+- name: copy limits file for builder
+  template: src=docker-container-limits.conf.j2 dest={{image_build_directory}}/99-docker-limits.conf owner=root group=root mode=0544
 
 - name: copy {{docker_file}} to host
   template: src="{{docker_file}}" dest="{{image_build_directory}}/Dockerfile"

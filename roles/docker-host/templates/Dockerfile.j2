@@ -16,6 +16,7 @@ WORKDIR /home/jenkins/
 ADD start.sh /home/jenkins/
 RUN chmod 755 /home/jenkins/start.sh
 ENTRYPOINT ["/home/jenkins/start.sh"]
+ADD 99-docker-limits.conf /etc/security/limits.d/
 {% for item in docker_file_additions -%}
 {{ item }}
 {% endfor -%}
