@@ -4,6 +4,13 @@ if [ OWNER != "jenkins" ]
 then
   chown -R jenkins:jenkins /workspace
 fi
+if [ ! -d /workspace/maven ]
+then
+  mkdir /workspace/maven
+  chown -R jenkins:jenkins /workspace/maven
+fi
+ln -s /workspace/maven .m2
+chown jenkins:jenkins .m2
 # Use swarm client to connect to jenkins. Broadcast didn't work due to container networking,
 # so easiest thing to do was just to set right address.
 {% set labelscsv = labels|join(",") -%}
