@@ -17,5 +17,5 @@ ADD start.sh /home/jenkins/
 RUN chmod 755 /home/jenkins/start.sh
 ENTRYPOINT ["/home/jenkins/start.sh"]
 {% for item in docker_file_additions -%}
-{{ item }};
+{{ item }}
 {% endfor -%}
