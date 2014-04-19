@@ -3,7 +3,7 @@ MAINTAINER jyrki.puttonen@sysart.fi
 RUN yum install -y java-1.7.0-openjdk-devel blackbox firefox tigervnc-server dejavu-sans-fonts dejavu-serif-fonts ImageMagick unzip ansible puppet git tigervnc
 RUN useradd jenkins
 ADD vncpasswd /home/jenkins/.vnc/passwd
-RUN chown -R jenkins:jenkins /home/jenkins/.vnc
+RUN chmod 600 /home/jenkins/.vnc/passwd
 # Run as jenkins user. Biggest reason for this is that in our tests, we want
 # # check some filesystem rights, and those tests will fail if the user is root.
 #ADD http://maven.jenkins-ci.org/content/repositories/releases/org/jenkins-ci/plugins/swarm-client/1.15/swarm-client-1.15-jar-with-dependencies.jar /home/jenkins/
