@@ -1,9 +1,9 @@
 docker_directory: "docker"
 image_name: "igor-builder"
 docker_file: "Dockerfile.j2"
-additional_docker_file: "empty_docker_file"
 additional_files: []
 docker_data_directory: "/data/docker"
 image_build_directory: "{{docker_data_directory}}/{{image_name}}"
 mode: "normal"
 labels: []
+docker_file_additions: []
